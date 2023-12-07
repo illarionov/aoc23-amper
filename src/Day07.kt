@@ -1,83 +1,65 @@
+import Card.J
+
 fun main() {
     val testInput = readInput("Day07_test")
     val input = readInput("Day07")
 
-    part1(testInput).also {
-        println("Part 1, test input: $it")
-        check(it == 6440)
-    }
-
-    part1(input).also {
-        println("Part 1, real input: $it")
-        // check(it == 1)
-    }
-
     part2(testInput).also {
         println("Part 2, test input: $it")
-        // check(it == 1)
+        check(it == 5905)
     }
 
     part2(input).also {
         println("Part 2, real input: $it")
-        // check(it == 1)
+        check(it == 254494947)
     }
 }
 
-enum class Card(val char: Char, val order: Int) {
-    C2('2', 2),
-    C3('3', 3),
-    C4('4', 4),
-    C5('5', 5),
-    C6('6', 6),
-    C7('7', 7),
-    C8('8', 8),
-    C9('9', 9),
-    T('T', 10),
-    J('J', 11),
-    Q('Q', 12),
-    K('K', 13),
-    A('A', 14),
+enum class Card(val char: Char) {
+    J('J'),
+    C2('2'),
+    C3('3'),
+    C4('4'),
+    C5('5'),
+    C6('6'),
+    C7('7'),
+    C8('8'),
+    C9('9'),
+    T('T'),
+    Q('Q'),
+    K('K'),
+    A('A'),
 }
 
 enum class HandType(val predicate: (Hand) -> Boolean) : Comparable<HandType> {
-    FIVE_OF_A_KIND({ hand: Hand -> hand.cards.all { it == hand.cards[0] } }),
-    FOUR_OF_A_KIND(
-        { hand ->
-            hand.cards.groupingBy { it }.eachCount().any { it.component2() == 4 }
-        },
-    ),
-    FULL_HOUSE(
-        { hand ->
-            val groups = hand.cards.groupingBy { it }.eachCount().values.sortedDescending()
-            groups == listOf(3, 2)
-        },
-    ),
-    THREE_OF_A_KIND(
-        { hand ->
-            val groups = hand.cards.groupingBy { it }.eachCount().values.sortedDescending()
-            groups == listOf(3, 1, 1)
-        },
-    ),
-    TWO_PAIR(
-        { hand ->
-            val groups = hand.cards.groupingBy { it }.eachCount().values.sortedDescending()
-            groups == listOf(2, 2, 1)
-        },
-    ),
-    ONE_PAIR(
-        { hand ->
-            val groups = hand.cards.groupingBy { it }.eachCount().values.sortedDescending()
-            groups == listOf(2, 1, 1, 1)
-        },
-    ),
-    HIGH_CARD(
-        { hand ->
-            val groups = hand.cards.groupingBy { it }.eachCount().values
-            groups.size == 5
-        },
-    ),
-    OTHER(predicate = { hand -> true }),
+    FIVE_OF_A_KIND(5),
+    FOUR_OF_A_KIND(4, 1),
+    FULL_HOUSE(3, 2),
+    THREE_OF_A_KIND(3, 1, 1),
+    TWO_PAIR(2, 2, 1),
+    ONE_PAIR(2, 1, 1, 1),
+    HIGH_CARD(1, 1, 1, 1, 1),
+    ;
+
+    constructor(vararg expectedCombination: Int) : this({ hand: Hand -> hand.cards.hasCombinationWithJokers(counts = expectedCombination) })
 }
+
+private fun List<Card>.hasCombinationWithJokers(vararg counts: Int): Boolean {
+    val groups = this.groupingBy { it }.eachCount()
+    val countsList = counts.toList()
+    return if (groups.values.sortedDescending() == countsList) {
+        true
+    } else {
+        val jokers = groups.getOrDefault(J, 0)
+        val groupsNoJokers = groups - J
+        for (jokerCard in groupsNoJokers.keys) {
+            val newGroups: Map<Card, Int> = groupsNoJokers + (jokerCard to groupsNoJokers[jokerCard]!! + jokers)
+            if (newGroups.values.sortedDescending() == countsList) return true
+        }
+        return false
+    }
+}
+
 
 data class Hand(
     val cards: List<Card>,
@@ -123,14 +105,10 @@ fun String.parseHandBind(): HandBid {
     )
 }
 
-private fun part1(input: List<String>): Int {
+private fun part2(input: List<String>): Int {
     val cards = input.map { it.parseHandBind() }
     val sortedCards = cards.sortedByDescending { it.hand }
     return sortedCards.foldIndexed(0) { index, acc, handBid ->
         acc + (1 + index) * handBid.bid
     }
-}
-
-private fun part2(input: List<String>): Int {
-    return input.size
 }
