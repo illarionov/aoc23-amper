@@ -79,7 +79,7 @@ private fun List<List<Char>>.hasAdjacentSymbol(row: Int, startCol: Int, endCol: 
     }
 }
 
-private data class Pos(
+public data class Pos(
     val row: Int,
     val col: Int
 )
