@@ -135,8 +135,7 @@ private fun String.parse(): ConditionRecord {
 
 private fun part1(input: List<ConditionRecord>): Int {
     return input.sumOf {
-        // val combs = it.getArrangementsBruteforce()
-        val combs = it.getArrangements2()
+        val combs = it.getArrangementsBruteforce()
         println("combs for ${it.groups}: $combs")
         combs
     }
@@ -147,138 +146,11 @@ private fun part2(input: List<ConditionRecord>): Long {
     // println("input: $input")
 
     var idx = 0
-    return input.sumOf {
-        val combs = it.getArrangements2().toLong()
-        println("combs for ${idx++} ${it.groups}: $combs")
-        combs
-    }
-}
-
-private fun ConditionRecord.getArrangements3(): Int {
-    return 0
-}
-
-private fun ConditionRecord.getArrangements2(): Int {
-    val queue: ArrayDeque<PartialMatchPos> = ArrayDeque()
-    val groups = this.groups
-
-    var combinations = 0
-//    var combinationsCache: MutableMap<PartialMatchPos, Int> = mutableMapOf()
-
-    var firstPos = PartialMatchPos(
-        springValue = UNK,
-        springNo = sprigs.lastIndex,
-        groupNo = groups.lastIndex,
-        groupVal = 0,
-        isAfterGroup = true,
-        partial = true,
-    )
-    queue.add(firstPos)
-    while (queue.isNotEmpty()) {
-        val lastPos = queue.removeFirst()
-
-        if (!lastPos.partial) {
-            combinations += 1
-            continue
-        }
-        getNextMatch(lastPos, DMG)?.let {
-            if (!it.partial) {
-                combinations += 1
-            } else {
-                queue.add(it)
-            }
-        }
-        getNextMatch(lastPos, OP)?.let {
-            if (!it.partial) {
-                combinations += 1
-            } else {
-                queue.add(it)
-            }
-        }
-    }
-
-    return combinations
-}
-
-private data class PartialMatchPos(
-    val springValue: Spring,
-    val springNo: Int,
-    val groupNo: Int,
-    val groupVal: Int,
-    val isAfterGroup: Boolean,
-    var partial: Boolean,
-)
-
-private fun ConditionRecord.getNextMatch(predMatch: PartialMatchPos, newValue: Spring): PartialMatchPos? {
-    var isAfterGroup = predMatch.isAfterGroup
-    var groupNo = predMatch.groupNo
-    var groupVal = predMatch.groupVal
-    var springIndex = predMatch.springNo
-    var partial = false
-
-//    run {
-//        val springsText = predMatch.springs.joinToString("")
-//
-////        println("getPartialMatchIn(${springsText}, startPos ${predMatch.springNo} val: ${newValue}; " +
-////                "Group: ${predMatch.groupNo}:${predMatch.groupVal}${if (predMatch.isAfterGroup) "]" else ""})")
+//    return input.sumOf {
+//        val combs = it.getArrangements3().toLong()
+//        println("combs for ${idx++} ${it.groups}: $combs")
+//        combs
 //    }
-
-    var isFirstReplace = true
-    while (springIndex >= 0) {
-        var spring = sprigs[springIndex]
-        if (spring == UNK && isFirstReplace) {
-            spring = newValue
-            isFirstReplace = false
-        }
-        springIndex -= 1
-        when (spring) {
-            OP -> {
-                if (isAfterGroup) {
-                    continue
-                } else {
-                    // Start of group
-                    if (groupNo < 0 || groups[groupNo] != groupVal) return null
-                    groupNo -= 1
-                    groupVal = 0
-                    isAfterGroup = true
-                }
-            }
-
-            DMG -> {
-                if (isAfterGroup) {
-                    // open group
-                    check(groupVal == 0)
-                    isAfterGroup = false
-                    groupVal = 1
-                } else {
-                    groupVal += 1
-                }
-            }
-
-            UNK -> {
-                partial = true
-                springIndex += 1
-                break
-            }
-        }
-    }
-    if (!partial) {
-        if (groupVal != 0) {
-            if (groupNo < 0 || groups[groupNo] != groupVal) return null
-            groupNo -= 1
-            isAfterGroup = true
-        }
-        if (groupNo != -1) return null
-    }
-
-    return PartialMatchPos(
-        groupNo = groupNo,
-        groupVal = groupVal,
-        isAfterGroup = isAfterGroup,
-        springValue = newValue,
-        springNo = springIndex,
-        partial = partial,
-    ).also {
-        //println("pos: $it")
-    }
 }
+
+
