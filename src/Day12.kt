@@ -149,9 +149,10 @@ private fun part1(input: List<ConditionRecord>): Int {
 private fun part2(input: List<ConditionRecord>): Long {
     // println("input: $input")
 
+    var idx = 0
     return input.sumOf {
         val combs = it.getArrangements2().toLong()
-        println("combs for ${it.groups}: $combs")
+        println("combs for ${idx++} ${it.groups}: $combs")
         combs
     }
 }
@@ -171,18 +172,26 @@ private fun ConditionRecord.getArrangements2(): Int {
         val lastPos = queue.removeLast()
         // println("lastPost: $lastPos, groups: ${groups}")
 
-        if (lastPos.sprigs.isComplete()) {
-            if (lastPos.isEndOfGroupsIn(groups)) {
-                combinations += 1
-            }
+        if (lastPos.isComplete) {
+            combinations += 1
             continue
         }
         val nextOp = lastPos.sprigs.getNext(OP)
-        nextOp.getPartialMatchIn(groups)?.let { queue.add(it) }
+        nextOp.getPartialMatchIn(groups)?.let {
+            if (lastPos.isComplete) {
+                combinations += 1
+            } else {
+                queue.add(it)
+            }
+        }
 
         val nextDam = lastPos.sprigs.getNext(DAM)
         nextDam.getPartialMatchIn(groups)?.let {
-            queue.add(it)
+            if (lastPos.isComplete) {
+                combinations += 1
+            } else {
+                queue.add(it)
+            }
         }
     }
 
@@ -195,7 +204,10 @@ private fun List<Spring>.getNext(s: Spring): List<Spring> {
     return this.toMutableList().apply { this[firstUnk] = s }
 }
 
-private fun List<Spring>.isComplete() = indexOf(UNK) == -1
+//private fun getNextMathingPos(
+//    olsPos: PartialMatchPos,
+//    newSprings: S
+//)
 
 private fun List<Spring>.getPartialMatchIn(groups: List<Int>): PartialMatchPos? {
     var isBeforeGroup = true
@@ -222,6 +234,7 @@ private fun List<Spring>.getPartialMatchIn(groups: List<Int>): PartialMatchPos? 
                     }
                 }
             }
+
             DAM -> {
                 if (isBeforeGroup) {
                     // Open group
@@ -232,33 +245,39 @@ private fun List<Spring>.getPartialMatchIn(groups: List<Int>): PartialMatchPos? 
                     brokenCounter += 1
                 }
             }
+
             UNK -> {
                 partial = true
                 break
             }
         }
     }
-    if (!partial && brokenCounter != 0) {
-        if (groupNo >= groups.size || groups[groupNo] != brokenCounter) return null
-        groupNo += 1
-        isBeforeGroup = true
+    if (!partial) {
+        if (brokenCounter != 0) {
+            if (groupNo >= groups.size || groups[groupNo] != brokenCounter) return null
+            groupNo += 1
+            isBeforeGroup = true
+        }
+        if (groupNo != groups.size) return null
     }
 
-    return PartialMatchPos(sprigs = this, groupNo = groupNo, isBeforeGroup = isBeforeGroup)
+    return PartialMatchPos(
+        sprigs = this,
+        groupNo = groupNo,
+        isBeforeGroup = isBeforeGroup,
+        isComplete = !partial,
+    )
 }
 
 private data class PartialMatchPos(
     val sprigs: List<Spring>,
+    val groups: List<String>,
+    val springNo: Int,
     val groupNo: Int,
-    val isBeforeGroup: Boolean
+    val isBeforeGroup: Boolean,
+    var isComplete: Boolean = false,
 ) {
-    fun isEndOfGroupsIn(groups: List<Int>): Boolean {
-        return groupNo == groups.size && isBeforeGroup == true
-    }
-
     override fun toString(): String {
         return "PartialMatchPos(sprigs=${sprigs.joinToString("")}, groupNo=$groupNo, isBeforeGroup=$isBeforeGroup)"
     }
-
-
 }
