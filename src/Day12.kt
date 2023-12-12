@@ -163,6 +163,8 @@ private fun ConditionRecord.getArrangements2(): Int {
     val groups = this.groups
 
     var combinations = 0
+//    var combinationsCache: MutableMap<PartialMatchPos, Int> = mutableMapOf()
+
     var firstPos = PartialMatchPos(
         springValue = UNK,
         springNo = sprigs.lastIndex,
@@ -170,12 +172,10 @@ private fun ConditionRecord.getArrangements2(): Int {
         groupVal = 0,
         isAfterGroup = true,
         partial = true,
-        springs = sprigs
     )
     queue.add(firstPos)
     while (queue.isNotEmpty()) {
-        val lastPos = queue.removeLast()
-        // prinprintln("lastPost: $lastPos, groups: ${groups}")
+        val lastPos = queue.removeFirst()
 
         if (!lastPos.partial) {
             combinations += 1
@@ -201,18 +201,13 @@ private fun ConditionRecord.getArrangements2(): Int {
 }
 
 private data class PartialMatchPos(
-    val springs: List<Spring>,
     val springValue: Spring,
     val springNo: Int,
     val groupNo: Int,
     val groupVal: Int,
     val isAfterGroup: Boolean,
     var partial: Boolean,
-) {
-    override fun toString(): String {
-        return "PA(springs=${springs.joinToString("")}, springValue=$springValue, springNo=$springNo, groupNo=$groupNo, groupVal=$groupVal, isAfterGroup=$isAfterGroup, partial=$partial)"
-    }
-}
+)
 
 private fun ConditionRecord.getNextMatch(predMatch: PartialMatchPos, newValue: Spring): PartialMatchPos? {
     var isAfterGroup = predMatch.isAfterGroup
@@ -220,7 +215,6 @@ private fun ConditionRecord.getNextMatch(predMatch: PartialMatchPos, newValue: S
     var groupVal = predMatch.groupVal
     var springIndex = predMatch.springNo
     var partial = false
-    val newSprings = predMatch.springs.toMutableList()
 
 //    run {
 //        val springsText = predMatch.springs.joinToString("")
@@ -235,7 +229,6 @@ private fun ConditionRecord.getNextMatch(predMatch: PartialMatchPos, newValue: S
         if (spring == UNK && isFirstReplace) {
             spring = newValue
             isFirstReplace = false
-            newSprings[springIndex] = newValue
         }
         springIndex -= 1
         when (spring) {
@@ -285,7 +278,6 @@ private fun ConditionRecord.getNextMatch(predMatch: PartialMatchPos, newValue: S
         springValue = newValue,
         springNo = springIndex,
         partial = partial,
-        springs = newSprings
     ).also {
         //println("pos: $it")
     }
