@@ -9,7 +9,7 @@ fun main() {
 
     part1(input).also {
         println("Part 1, real input: $it")
-        // check(it == 1)
+        check(it == 108614)
     }
 
     part2(testInput).also {
@@ -19,7 +19,7 @@ fun main() {
 
     part2(input).also {
         println("Part 2, real input: $it")
-        // check(it == 1)
+        check(it == 96447)
     }
 }
 
@@ -39,26 +39,27 @@ private fun part1(input: List<List<Char>>): Int {
 }
 
 private fun part2(input: List<List<Char>>): Int {
-    val history: MutableMap<List<List<Char>>, Int> = mutableMapOf()
-    var platform = input
+    var tortoise = input
+    var hare = input
 
     var cycle = 0
-    history[input] = 0
+    var hareCycle = 0
     while (cycle < 1000000000) {
         cycle += 1
-        platform = roll(platform)
-        val old = history[platform]
-        if (old != null) {
-            val size = old - cycle
+        hareCycle += 2
+        tortoise = roll(tortoise)
+        hare = roll(hare)
+        hare = roll(hare)
+        if (hare == tortoise) {
+            val size = hareCycle - cycle
             val full = (1000000000 - cycle) / size
             cycle += full * size
-        } else {
-            history[platform] = cycle
         }
     }
-    val load = platform.totalLoad()
+    val load = tortoise.totalLoad()
     return load
 }
+
 
 private fun List<List<Char>>.totalLoad(): Int {
     var sum = 0
